@@ -43,10 +43,10 @@ contains
     scheme_dt = T / scheme_maxStep
 
     !! Second, allocate arrays
-    allocate( scheme_gridSize(-1:scheme_numOfGrid+2), &
-         & scheme_gridNode(-1:scheme_numOfGrid+2), &
-         & scheme_u(-1:scheme_numOfGrid+2), &
-         & scheme_flux(0:scheme_numOfGrid) )
+    associate( n => scheme_numOfGrid )
+      allocate( scheme_gridSize(-1:n+2), scheme_gridNode(-1:n+2), &
+           & scheme_u(-1:n+2), scheme_flux(0:n) )
+    end associate
 
     !! Third, set data of arrays
     scheme_gridSize = scheme_dx
@@ -68,41 +68,45 @@ contains
     real(kind=WP), allocatable, dimension(:) :: u1
 
     associate(n=>scheme_numOfGrid)
-      allocate( u1(-1:n+2) )
+      allocate( u1(1:n) )
       allocate( k1(1:n), k2(1:n), k3(1:n), k4(1:n) )
+
+      ! RK4 method
+
+      u1 = scheme_u(1:n)
+
+      call flux_update()
+      forall ( i = 1:n )
+         k1(i) = scheme_dt * ( scheme_flux(i-1) - scheme_flux(i) ) / scheme_dx
+      end forall
+
+      scheme_u = u1 + 0.5 * k1
+      call flux_update()
+
+      forall ( i = 1:n )
+         k2(i) = scheme_dt * ( scheme_flux(i-1) - scheme_flux(i) ) / scheme_dx
+      end forall
+
+      scheme_u = u1 + 0.5 * k2
+      call flux_update()
+
+      forall ( i = 1:n )
+         k3(i) = scheme_dt * ( scheme_flux(i-1) - scheme_flux(i) ) / scheme_dx
+      end forall
+
+      scheme_u = u1 + k3
+      call flux_update()
+
+      forall ( i = 1:n )
+         k4(i) = scheme_dt * ( scheme_flux(i-1) - scheme_flux(i) ) / scheme_dx
+      end forall
+
+      scheme_u(1:n) = u1 + (k1 + 2.0*k2 + 2.0*k3 + k4) / 6.0
+
+      ! End of RK4
+
     end associate
-
-    ! RK4 method
-    u1 = scheme_u
-
-    call flux_update()
-    forall ( i = 1:scheme_numOfGrid )
-       k1(i) = scheme_dt * ( scheme_flux(i-1) - scheme_flux(i) ) / scheme_dx
-    end forall
-
-    scheme_u = u1 + 0.5 * k1
-    call flux_update()
-
-    forall ( i = 1:scheme_numOfGrid )
-       k2(i) = scheme_dt * ( scheme_flux(i-1) - scheme_flux(i) ) / scheme_dx
-    end forall
-
-    scheme_u = u1 + 0.5 * k2
-    call flux_update()
-
-    forall ( i = 1:scheme_numOfGrid )
-       k3(i) = scheme_dt * ( scheme_flux(i-1) - scheme_flux(i) ) / scheme_dx
-    end forall
-
-    scheme_u = u1 + k3
-    call flux_update()
-
-    forall ( i = 1:scheme_numOfGrid )
-       k4(i) = scheme_dt * ( scheme_flux(i-1) - scheme_flux(i) ) / scheme_dx
-    end forall
-
-    scheme_u = u1 + (k1 + 2.0*k2 + 2.0*k3 + k4) / 6.0
-    ! End of RK4
+    call scheme_boudaryCondition ()
 
   contains
 
