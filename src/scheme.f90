@@ -17,7 +17,8 @@ module scheme
   real(kind=WP), public, allocatable, dimension(:) :: scheme_gridNode
   real(kind=WP), public, allocatable, dimension(:) :: scheme_flux
 
-  public :: scheme_init, scheme_update, scheme_calculateError
+  public :: scheme_init, scheme_update, scheme_calculateError,&
+       & scheme_writeToFile, scheme_uExact
 
 
 contains
@@ -80,21 +81,21 @@ contains
          k1(i) = scheme_dt * ( scheme_flux(i-1) - scheme_flux(i) ) / scheme_dx
       end forall
 
-      scheme_u = u1 + 0.5 * k1
+      scheme_u(1:n) = u1 + 0.5 * k1
       call flux_update()
 
       forall ( i = 1:n )
          k2(i) = scheme_dt * ( scheme_flux(i-1) - scheme_flux(i) ) / scheme_dx
       end forall
 
-      scheme_u = u1 + 0.5 * k2
+      scheme_u(1:n) = u1 + 0.5 * k2
       call flux_update()
 
       forall ( i = 1:n )
          k3(i) = scheme_dt * ( scheme_flux(i-1) - scheme_flux(i) ) / scheme_dx
       end forall
 
-      scheme_u = u1 + k3
+      scheme_u(1:n) = u1 + k3
       call flux_update()
 
       forall ( i = 1:n )
@@ -137,10 +138,15 @@ contains
 
   end subroutine scheme_update
 
-  subroutine scheme_calculateError (ue)
+  function scheme_calculateError (ue) result (error)
     implicit none
-    real, intent(in) :: ue
-  end subroutine scheme_calculateError
+    real(kind=WP), intent(in), dimension(scheme_numOfGrid) :: ue
+    real(kind=WP) :: error
+
+    associate( n => scheme_numOfGrid )
+      error = maxval( abs( ue(1:n) - scheme_u(1:n) ) )
+    end associate
+  end function scheme_calculateError
 
   subroutine scheme_boudaryCondition ()
     implicit none
@@ -154,5 +160,29 @@ contains
     end associate
 
   end subroutine scheme_boudaryCondition
+
+  subroutine scheme_writeToFile ( n )
+    implicit none
+
+    integer, intent(in) :: n
+    integer :: i
+    character( len = 2 ) :: cTemp
+
+    write(cTemp, '(i2)') n
+
+    open(unit=101, file='data' // trim(adjustl(cTemp)) // '.out',&
+         & action='write', status='new')
+    write(101, *) (scheme_u(i), i = 1, scheme_numOfGrid)
+    close(101)
+  end subroutine scheme_writeToFile
+
+  function scheme_uExact () result ( u )
+    real(kind=WP), dimension(scheme_numOfGrid) :: u, tmp
+
+    associate( n => scheme_numOfGrid )
+      tmp = sin( PI * scheme_gridSize(1:n) ) / ( PI * scheme_gridSize(1:n) )
+      u = tmp * sin( 2.0 * PI * ( scheme_gridNode(1:n) - a * T ) )
+    end associate
+  end function scheme_uExact
 
 end module scheme
