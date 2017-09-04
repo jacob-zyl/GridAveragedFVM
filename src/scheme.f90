@@ -4,8 +4,8 @@ module scheme
   private
 
   real(kind=WP), parameter :: a = 1.0 ! coefficient in equation
-  real(kind=WP), parameter :: L = 3.0 ! length of spatial region to solve
-  real(kind=WP), parameter :: T = 5.0 ! length of temporal region to solve
+  real(kind=WP), parameter :: L = 1.0 ! length of spatial region to solve
+  real(kind=WP), parameter :: T = 1.5 ! length of temporal region to solve
 
   real(kind=WP), public :: scheme_CFL, scheme_dt, scheme_dx
   integer, public :: scheme_maxStep, scheme_numOfGrid
@@ -127,6 +127,7 @@ contains
       integer :: i
       real(kind=WP) :: tmp1, tmp2, tmp3
 
+      call scheme_boudaryCondition ()
       do i = 1, scheme_numOfGrid
          tmp1 = scheme_u(i) + scheme_u(i+1)
          tmp2 = scheme_u(i-1) + scheme_u(i+2)
