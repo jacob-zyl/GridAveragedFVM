@@ -54,5 +54,5 @@ set (CMAKE_Fortran_FLAGS_RELAESE
 #
 # Compile.
 #
-file (GLOB_RECURSE sources  src/main.f90 src/scheme.f90 src/constant.f90)
+file (GLOB_RECURSE sources  src/main.f90 src/scheme.f90 src/constant.f90 src/*.f90)
 add_executable (prog ${sources})

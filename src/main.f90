@@ -1,5 +1,5 @@
 program main
-  use scheme
+  use scheme2
   use constant
   implicit none
 
