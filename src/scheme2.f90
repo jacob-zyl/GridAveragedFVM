@@ -17,8 +17,8 @@ module scheme2
   real(kind=WP), public, allocatable, dimension(:) :: scheme_gridNode
   real(kind=WP), public, allocatable, dimension(:) :: scheme_flux
 
-  public :: scheme_init, scheme_update, scheme_calculateError,&
-       & scheme_writeToFile, scheme_uExact
+  public :: scheme_init, scheme_update, scheme_calculateErrorInfinity,&
+       & scheme_writeToFile, scheme_uExact, scheme_calculateErrorL1
 
 
 contains
@@ -139,7 +139,7 @@ contains
 
   end subroutine scheme_update
 
-  function scheme_calculateError (ue) result (error)
+  function scheme_calculateErrorInfinity (ue) result (error)
     implicit none
     real(kind=WP), intent(in), dimension(scheme_numOfGrid) :: ue
     real(kind=WP) :: error
@@ -147,7 +147,17 @@ contains
     associate( n => scheme_numOfGrid )
       error = maxval( abs( ue(1:n) - scheme_u(1:n) ) )
     end associate
-  end function scheme_calculateError
+  end function scheme_calculateErrorInfinity
+
+  function scheme_calculateErrorL1 (ue) result (error)
+    implicit none
+    real(kind=WP), intent(in), dimension(scheme_numOfGrid) :: ue
+    real(kind=WP) :: error
+
+    associate( n => scheme_numOfGrid )
+      error = sum( abs( ue(1:n) - scheme_u(1:n) ) ) / n
+    end associate
+  end function scheme_calculateErrorL1
 
   subroutine scheme_boudaryCondition ()
     implicit none

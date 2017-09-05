@@ -1,5 +1,5 @@
 program main
-  use scheme2
+  use scheme
   use constant
   implicit none
 
@@ -14,6 +14,6 @@ program main
   end do
 
   call scheme_writeToFile ( 1 )
-  write(*,*) scheme_calculateError( scheme_uExact() ), scheme_dx
-
+  write(*,*) scheme_calculateErrorInfinity( scheme_uExact() ), &
+       &     scheme_calculateErrorL1( scheme_uExact() ), scheme_dx
 end program
