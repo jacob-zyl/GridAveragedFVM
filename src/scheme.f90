@@ -5,7 +5,7 @@ module scheme
 
   real(kind=WP), parameter :: a = 1.0 ! coefficient in equation
   real(kind=WP), parameter :: L = 1.0 ! length of spatial region to solve
-  real(kind=WP), parameter :: T = 9.5 ! length of temporal region to solve
+  real(kind=WP), parameter :: T = 0.5 ! length of temporal region to solve
 
   real(kind=WP), public :: scheme_CFL, scheme_dt, scheme_dx
   integer, public :: scheme_maxStep, scheme_numOfGrid
