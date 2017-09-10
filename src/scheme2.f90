@@ -7,6 +7,8 @@ module scheme2
   real(kind=WP), parameter :: L = 1.0 ! length of spatial region to solve
   real(kind=WP), parameter :: T = 1.5 ! length of temporal region to solve
 
+  real(kind=WP) :: kappa
+
   real(kind=WP), public :: scheme_CFL, scheme_dt, scheme_dx
   integer, public :: scheme_maxStep, scheme_numOfGrid
 
@@ -42,6 +44,7 @@ contains
     scheme_dt = scheme_dx * scheme_CFL / a
     scheme_maxStep = floor( T / scheme_dt ) + 1
     scheme_dt = T / scheme_maxStep
+    kappa = calculateKappa( a )
 
     !! Second, allocate arrays
     associate( n => scheme_numOfGrid )
@@ -107,20 +110,8 @@ contains
       ! End of RK4
 
     end associate
-    call scheme_boudaryCondition ()
 
   contains
-
-    function kappa (a)
-      real(kind=WP) :: kappa
-      real(kind=WP), intent(in) :: a
-
-      if ( abs(a) > epsilon(a) ) then
-         kappa = a / abs(a)
-      else
-         kappa = a / (a*a + epsilon(a)*epsilon(a)) / (2 * epsilon(a))
-      end if
-    end function kappa
 
     subroutine flux_update ()
       implicit none
@@ -132,7 +123,7 @@ contains
          tmp1 = scheme_u(i) + scheme_u(i+1)
          tmp2 = scheme_u(i-1) + scheme_u(i+2)
          tmp3 = scheme_u(i+2) - 3.0*scheme_u(i+1) + 3.0*scheme_u(i) - scheme_u(i-1)
-         scheme_flux(i) = 9.0*a/16.0*tmp1 - tmp2*a/16.0 + kappa(a)*a/16.0*tmp3
+         scheme_flux(i) = 9.0*a/16.0*tmp1 - tmp2*a/16.0 + kappa*a/16.0*tmp3
       end do
       scheme_flux(0) = scheme_flux(scheme_numOfGrid)
     end subroutine flux_update
@@ -196,4 +187,14 @@ contains
     end associate
   end function scheme_uExact
 
+  function calculateKappa (a) result (k)
+    real(kind=WP) :: k
+    real(kind=WP), intent(in) :: a
+
+    if ( abs(a) > epsilon(a) ) then
+       k = a / abs(a)
+    else
+       k = a / (a*a + epsilon(a)*epsilon(a)) / (2 * epsilon(a))
+    end if
+  end function calculateKappa
 end module scheme2
